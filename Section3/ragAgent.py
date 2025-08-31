@@ -57,9 +57,11 @@ llm = AzureChatOpenAI(
 qa = RetrievalQA.from_chain_type(llm, retriever=retriever)
 
 # test
-# query = input("대칭키와 비대칭키의 차이를 설명해줘")
+# query = "대칭키와 비대칭키의 차이를 설명해줘"
 query = input("질문을 입력하세요: ")
 
 result = qa.run(query)
 print("💖 ---질문--- 💖 :", query)
-print("🫧 ---답변--- 🫧 :", result)
+print("\n🫧 ---답변 요약--- 🫧")
+for line in result.splitlines():
+    print(line)
