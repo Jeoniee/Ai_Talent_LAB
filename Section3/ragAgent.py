@@ -9,12 +9,16 @@ from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQA
 
 # pdf 로드
-loader = PyMuPDFLoader("your_sample_docs.pdf")
-docs = loader.load()
+try :
+    loader = PyMuPDFLoader("정보보안기사 필기 요약(합본).pdf")
+    docs = loader.load()
+except Exception as e:
+    print(f"pdf 로드 중 오류 발생: {e}")
+    exit(1)
 
 # pdf 텍스트가 잘 뽑히는지 먼저 확인
-print(len(docs), "pages loaded")
-print(docs[0].page_content[:300])
+# print(len(docs), "pages loaded")
+# print(docs[0].page_content[:300])
 
 # 텍스트 splitter
 text_splitter = RecursiveCharacterTextSplitter(
@@ -24,8 +28,8 @@ text_splitter = RecursiveCharacterTextSplitter(
 
 # Splitter 실행
 splits = text_splitter.split_documents(docs)
-print(f"총 {len(splits)} 개의 청크로 분할")
-print(splits[0].page_content[:300])
+# print(f"총 {len(splits)} 개의 청크로 분할")
+# print(splits[0].page_content[:300])
 
 
 # Indexing (Vector DB)
@@ -38,7 +42,10 @@ embeddings = AzureOpenAIEmbeddings(
 vectorstore = FAISS.from_documents(splits, embeddings)
 
 # Retriever
-retriever = vectorstore.as_retriever()
+# retriever = vectorstore.as_retriever()
+
+# 검색 파라미터 최적화 MMR
+retriever = vectorstore.as_retriever(search_type="mmr", search_kwargs={"k": 5, "lambda_mult": 0.7})
 
 # LLM + QA 체인
 llm = AzureChatOpenAI(
@@ -50,7 +57,9 @@ llm = AzureChatOpenAI(
 qa = RetrievalQA.from_chain_type(llm, retriever=retriever)
 
 # test
-query = "대칭키와 비대칭키의 차이를 설명해줘"
+# query = input("대칭키와 비대칭키의 차이를 설명해줘")
+query = input("질문을 입력하세요: ")
+
 result = qa.run(query)
 print("💖 ---질문--- 💖 :", query)
 print("🫧 ---답변--- 🫧 :", result)
