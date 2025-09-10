@@ -15,7 +15,7 @@ from langchain_community.vectorstores import Chroma, FAISS
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 # utils.py에서 공통 설정/함수 불러오기
-from utils import load_documents, VDB_DIR, AOAI_ENDPOINT, AOAI_API_KEY, DEPLOY_EMBED
+from utils import load_and_ingest, VDB_DIR, AOAI_ENDPOINT, AOAI_API_KEY, DEPLOY_EMBED
 
 # -----------------------------
 # 전역 설정값
@@ -53,7 +53,7 @@ def build_payload() -> Tuple[List[str], List[dict]]:
     data/ 폴더에서 문서를 불러와 청크 단위로 분할하고
     텍스트 리스트(texts)와 메타데이터 리스트(metadatas)를 반환.
     """
-    docs = load_documents()  # utils.load_documents: [{"path":..., "content":...}]
+    docs = load_and_ingest()  # utils.load_documents: [{"path":..., "content":...}]
     if not docs:
         raise SystemExit("data/ 폴더에 TXT/PDF 문서를 넣어주세요.")
 
@@ -61,12 +61,12 @@ def build_payload() -> Tuple[List[str], List[dict]]:
     texts, metas = [], []
 
     for d in docs:
-        chunks = splitter.split_text(d["content"])
+        chunks = splitter.split_text(d.page_content)
         for ch in chunks:
             if not ch.strip():
                 continue
             texts.append(ch)
-            metas.append({"source": d["path"]})  # 각 청크의 출처 경로 기록
+            metas.append({"source": d.metadata.get("source", "unknown")})
 
     if not texts:
         raise SystemExit("문서는 있었지만 유효한 청크를 만들지 못했습니다.")
@@ -122,18 +122,18 @@ def main():
     # 문서 로딩 → 청크 생성
     print(" 문서 로딩 및 청크 분할 중…")
     texts, metas = build_payload()
-    print(f" 청크 {len(texts)}개 준비 완료.")
+    print(f" 청크 {len(texts)}개 준비 완료.💖")
 
     # Chroma 인덱싱
-    print(" Chroma 인덱싱 중…")
+    print(" Chroma 인덱싱 중…💖")
     build_chroma(texts, metas, chroma_dir)
-    print(f" Chroma 인덱스 완료 → {chroma_dir}")
+    print(f" Chroma 인덱스 완료 → {chroma_dir}💖")
 
     # --faiss 옵션: FAISS 백업도 함께
     if args.faiss:
-        print(" FAISS 백업 인덱스 생성 중…")
+        print(" FAISS 백업 인덱스 생성 중…💖")
         build_faiss(texts, metas, faiss_dir)
-        print(f" FAISS 인덱스 저장 → {faiss_dir}")
+        print(f" FAISS 인덱스 저장 → {faiss_dir}💖")
 
 
 

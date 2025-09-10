@@ -1,7 +1,14 @@
+
 from fastapi import FastAPI
 from pydantic import BaseModel
-from frontend.graph import build_graph
+import sys
+from pathlib import Path
 
+# 프로젝트 루트 디렉토리를 sys.path 경로에 추가
+sys.path.append(str(Path(__file__).resolve().parents[2]))
+
+# 이제 frontend.graph를 임포트할 수 있습니다.
+from frontend.graph import build_graph
 app = FastAPI()
 
 class DebateRequest(BaseModel):

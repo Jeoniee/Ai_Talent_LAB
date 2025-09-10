@@ -3,7 +3,15 @@ import os
 from typing import Dict, Any
 from langgraph.graph import StateGraph, END
 from langchain_openai import AzureChatOpenAI
-from utils import get_retriever
+from frontend.utils import get_retriever
+from frontend.prompts import (
+    planner_prompt,
+    prosecution_prompt,
+    defense_prompt,
+    judge_prompt,
+    writer_prompt,
+)
+
 
 # -----------------------------
 # LLM 초기화
@@ -16,14 +24,6 @@ llm = AzureChatOpenAI(
     temperature=0.3,
 )
 
-# -----------------------------
-# 프롬프트
-# -----------------------------
-planner_prompt = "주제 {topic} 에 대해 검사·변호사·판사가 토론할 계획을 JSON으로 짜라."
-prosecution_prompt = "주제 {topic} 에 대해 검사 입장에서 발언하라.\n{docs}"
-defense_prompt = "주제 {topic} 에 대해 변호사 입장에서 반박하라.\n검사 주장: {pros}\n{docs}"
-judge_prompt = "검사: {pros}\n변호사: {defs}\n주제 {topic} 에 대해 판사로서 요약·판단하라.\n{docs}"
-writer_prompt = "최종 보고서를 작성하라.\n주제: {topic}\n검사: {pros}\n변호사: {defs}\n판사: {judge}"
 
 # -----------------------------
 # 상태 정의
@@ -107,17 +107,3 @@ def build_graph():
     workflow.add_edge("writer", END)
 
     return workflow.compile()
-
-# -----------------------------
-# 실행 예시
-# -----------------------------
-if __name__ == "__main__":
-    graph = build_graph()
-    state = init_state()
-    state["topic"] = "사형제도 유지 vs 폐지"
-
-    for step in graph.stream(state):
-        print(step)
-
-    print("\n=== 최종 보고서 ===")
-    print(state["final_report"])
